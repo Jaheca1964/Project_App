@@ -11,7 +11,9 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./sign-up.page.scss'],
 })
 export class SignUpPage implements OnInit {
+
   form = new FormGroup({
+    uid: new FormControl(''),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required, Validators.minLength(4)]),
@@ -27,11 +29,14 @@ export class SignUpPage implements OnInit {
       const loading = await this.utilsSvC.loading();
       await loading.present();
 
-      this.firebaseSvC
-        .signUp(this.form.value as User)
-        .then(async (res) => {
+      this.firebaseSvC.signUp(this.form.value as User).then(async (res) => {
+
           await this.firebaseSvC.updateUser(this.form.value.name);
-          console.log(res);
+
+          let uid = res.user.uid
+          this.form.controls.uid.setValue(uid);
+
+          this.setUserInfo(uid)         
         })
         .catch((error) => {
           console.log(error);
@@ -61,7 +66,11 @@ export class SignUpPage implements OnInit {
 
       this.firebaseSvC.SetDocument(path, this.form.value).then(async (res) => {
 
-        
+        this.utilsSvC.saveInLocalStorage('user', this.form.value);
+        this.utilsSvC.routerLink('/main/home');
+        this.form.reset();
+
+
         })
         .catch((error) => {
           console.log(error);
