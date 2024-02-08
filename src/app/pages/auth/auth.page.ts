@@ -11,46 +11,78 @@ import { UtilsService } from 'src/app/services/utils.service';
   styleUrls: ['./auth.page.scss'],
 })
 export class AuthPage implements OnInit {
-
   form = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required])
-  })
+    password: new FormControl('', [Validators.required]),
+  });
 
   firebaseSvC = inject(FirebaseService);
-  utilsSvC = inject(UtilsService)
+  utilsSvC = inject(UtilsService);
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 
   async submit() {
-    if (this.form.valid){
-
-      const loading =await this.utilsSvC.loading();
+    if (this.form.valid) {
+      const loading = await this.utilsSvC.loading();
       await loading.present();
 
-
-      this.firebaseSvC.signIn(this.form.value as User).then(res => {
-        console.log(res);
-
-      }).catch(error => {
-        console.log(error);
-
-        this.utilsSvC.presentToast({
-          message: error.message,
-          duration: 2500,
-          color: 'primary',
-          position: 'middle',
-          icon: 'alert-circle-outline'
+      this.firebaseSvC
+        .signIn(this.form.value as User)
+        .then((res) => {
+          this.getUserInfo(res.user.uid);
         })
+        .catch((error) => {
+          console.log(error);
 
-
-    }).finally(() => {
-      loading.dismiss();
-    })
+          this.utilsSvC.presentToast({
+            message: error.message,
+            duration: 2500,
+            color: 'primary',
+            position: 'middle',
+            icon: 'alert-circle-outline',
+          });
+        })
+        .finally(() => {
+          loading.dismiss();
+        });
     }
-    
   }
+  async getUserInfo(uid: string) {
+    if (this.form.valid) {
+      const loading = await this.utilsSvC.loading();
+      await loading.present();
 
+      let path = `users/${uid}`;
+
+      this.firebaseSvC
+        .getDocument(path)
+        .then((user: User) => {
+          this.utilsSvC.saveInLocalStorage('user', user);
+          this.utilsSvC.routerLink('/main/home');
+          this.form.reset();
+
+          this.utilsSvC.presentToast({
+            message: `Te damos la bienvenida ${user.name}`,
+            duration: 1500,
+            color: 'primary',
+            position: 'middle',
+            icon: 'person-circle-outline',
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+
+          this.utilsSvC.presentToast({
+            message: error.message,
+            duration: 2500,
+            color: 'primary',
+            position: 'middle',
+            icon: 'alert-circle-outline',
+          });
+        })
+        .finally(() => {
+          loading.dismiss();
+        });
+    }
+  }
 }
