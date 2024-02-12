@@ -6,13 +6,17 @@ import { inject } from '@angular/core';
 import { UtilsService } from 'src/app/services/utils.service';
 
 @Component({
-  selector: 'app-forgot-password',
-  templateUrl: './forgot-password.page.html',
-  styleUrls: ['./forgot-password.page.scss'],
+  selector: 'app-add-update-product',
+  templateUrl: './add-update-product.component.html',
+  styleUrls: ['./add-update-product.component.scss'],
 })
-export class ForgotPasswordPage implements OnInit {
+export class AddUpdateProductComponent implements OnInit {
   form = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    id: new FormControl(''),
+    Image: new FormControl('', [Validators.required]),
+    name: new FormControl('', [Validators.required, Validators.minLength(4)]),
+    price: new FormControl('', [Validators.required, Validators.min(0)]),
+    soldUnits: new FormControl('', [Validators.required, Validators.min(0)]),
   });
 
   firebaseSvC = inject(FirebaseService);
@@ -26,18 +30,11 @@ export class ForgotPasswordPage implements OnInit {
       await loading.present();
 
       this.firebaseSvC
-        .sendRecoveryEmail(this.form.value.email)
-        .then((res) => {
-          this.utilsSvC.presentToast({
-            message: 'Correo enviado con exito',
-            duration: 1500,
-            color: 'primary',
-            position: 'middle',
-            icon: 'mail-outline',
-          });
+        .signUp(this.form.value as User)
+        .then(async (res) => {
+          await this.firebaseSvC.updateUser(this.form.value.name);
 
-          this.utilsSvC.routerLink('/auth');
-          this.form.reset();
+          let uid = res.user.uid;
         })
         .catch((error) => {
           console.log(error);
