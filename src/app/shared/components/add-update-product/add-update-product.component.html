@@ -2,18 +2,31 @@
 <ion-content>
 
 
-    <form [formGroup]="form" class="ionic-padding ion-text center" (ngSubmit)="submit()" (keypress.enter)="submit()">
+    <form [formGroup]="form" class="ion-padding ion-text center" (ngSubmit)="submit()" (keypress.enter)="submit()">
 
+        <!-- ==== Si existe una imagen === -->
+        <ion-avatar *ngIf="form.value.Image">
+            <img [src]="form.value.Image" />
+        </ion-avatar>
+
+        <!-- ==== Si no existe una imagen === -->
+        <ion-icon class="image-icon" *ngIf="!form.value.Image" name="image-outline"></ion-icon>
+
+
+        <br>
+        <!-- ===================== Tomar/Seleccionar una imagen === -->
+        <ion-button (click)="takeImage()" mode="ios" size="small" shape="round">
+            Tomar/Seleccionar
+        </ion-button>
 
         <!============ Name==========>
             <app-custom-input autocomplete="name" [control]="form.controls.name" type="text"
                 label="Nombre"></app-custom-input>
 
             <div class="validators" *ngIf="form.controls.name.errors && form.controls.name.touched">
-                <div *ngIf="form.controls.name.errors?.['required']">El correo es requerido</div>
+                <div *ngIf="form.controls.name.errors?.['required']">Este campo es requerido</div>
                 <div *ngIf="form.controls.name.errors?.['minlength']">El nombre debe tener al menos 4 caracteres</div>
             </div>
-
 
             <!============ Price==========>
                 <app-custom-input [control]="form.controls.price" type="number" label="Precio"></app-custom-input>
@@ -23,8 +36,11 @@
                     <div *ngIf="form.controls.price.errors?.['min']">El precio mínimo debe ser 0</div>
                 </div>
 
+                <ion-button mode="ios" class="ion-margin" fill="clear" shape="round">
+                </ion-button>
 
                 <!============ Sold Units==========>
+
                     <app-custom-input [control]="form.controls.soldUnits" type="number"
                         label="Unidades Vendidas"></app-custom-input>
 
@@ -37,9 +53,6 @@
                         Agregar Producto
                         <ion-icon slot="end" name="checkmark-circle-outline"></ion-icon>
                     </ion-button>
-
-
-
 
     </form>
 

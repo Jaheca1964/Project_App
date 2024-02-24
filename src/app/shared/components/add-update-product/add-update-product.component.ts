@@ -12,7 +12,6 @@ import { UtilsService } from 'src/app/services/utils.service';
 })
 export class AddUpdateProductComponent implements OnInit {
   form = new FormGroup({
-    id: new FormControl(''),
     Image: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required, Validators.minLength(4)]),
     price: new FormControl('', [Validators.required, Validators.min(0)]),
@@ -22,19 +21,44 @@ export class AddUpdateProductComponent implements OnInit {
   firebaseSvC = inject(FirebaseService);
   utilsSvC = inject(UtilsService);
 
-  ngOnInit() {}
+  user = {} as User;
+
+  ngOnInit() {
+    this.user = this.utilsSvC.getFromLocalStorage('user');
+  }
+
+  // ================= tomar/Seleccionar Imagen ========
+  async takeImage() {
+    const dataUrl = (await this.utilsSvC.takePicture('Imagen del Producto'))
+      .dataUrl;
+    this.form.controls.Image.setValue(dataUrl);
+  }
 
   async submit() {
     if (this.form.valid) {
+      let path = `users/${this.user.iud}/products`;
+
       const loading = await this.utilsSvC.loading();
       await loading.present();
 
-      this.firebaseSvC
-        .signUp(this.form.value as User)
-        .then(async (res) => {
-          await this.firebaseSvC.updateUser(this.form.value.name);
+      // === Subir la imagen y obtener la url ===
+      let dataUrl = this.form.value.Image;
+      let imagePath = `${this.user.iud}/${Date.now()}`;
+      let imageUrl = await this.firebaseSvC.uploadingImage(imagePath, dataUrl);
+      this.form.controls.Image.setValue(imageUrl);
 
-          let uid = res.user.uid;
+      this.firebaseSvC
+        .addDocument(path, this.form.value)
+        .then(async (res) => {
+          this.utilsSvC.dismissModal({ success: true });
+
+          this.utilsSvC.presentToast({
+            message: 'Producto creado exitosamente',
+            duration: 1500,
+            color: 'success',
+            position: 'middle',
+            icon: 'checkmark-circle-outline',
+          });
         })
         .catch((error) => {
           console.log(error);
